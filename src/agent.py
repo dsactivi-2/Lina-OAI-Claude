@@ -5,6 +5,7 @@ Instruktionen mit Kontext bauen → GPT-Live-Session → am Ende einmalig zurüc
 
 Kandidat: Dispatch-Metadaten `{"record_id": "rec..."}`. Nur zum lokalen Testen ohne Metadaten
 gilt `LINA_TEST_RECORD_ID` (Test-Kandidat K-0196).
+LINA_PREVIEW=1: Browser-Hörtest mit fiktiven Daten und FakeStore, ohne Airtable oder AMD.
 """
 
 import asyncio
@@ -43,7 +44,7 @@ logger = logging.getLogger("agent")
 
 load_dotenv(".env.local")
 
-AGENT_NAME = "livekit-oai-gig-casting"
+AGENT_NAME = os.getenv("LINA_AGENT_NAME", "livekit-oai-gig-casting")
 
 
 def _record_id(ctx: JobContext) -> str | None:
@@ -58,6 +59,36 @@ def _record_id(ctx: JobContext) -> str | None:
         logger.error("Dispatch-Metadaten ohne gültiges record_id")
         return None
     return os.getenv("LINA_TEST_RECORD_ID") or None
+
+
+def _initial_call_data(ctx: JobContext):
+    """Simulation, isolierter Browser-Hörtest oder regulärer Airtable-Pfad."""
+    if sim := ctx.simulation_context():
+        ud = sim.userdata()
+        fixed = None
+        if ud.get("sada"):
+            fixed = datetime.fromisoformat(ud["sada"]).replace(tzinfo=TZ)
+        return FakeStore(paket_iz_userdata(ud)), "recSIMULACIJA00001", fixed
+    if os.getenv("LINA_PREVIEW") == "1":
+        # Pro Gespräch frischer Speicher. Dispatch-Metadaten werden hier nicht gelesen.
+        paket = paket_iz_userdata(
+            {
+                "kandidat": {
+                    "ime": "Emir",
+                    "datum_rodjenja": "15.03.1992",
+                    "drzavljanstvo": "BiH",
+                    "vozacka": "B",
+                    "mjesto_rodjenja": "Bihać",
+                    "adresa": "Testna 1, 77000 Bihać",
+                    "email": "emir@example.com",
+                }
+            }
+        )
+        return FakeStore(paket), "recPREVIEW00000001", None
+    record_id = _record_id(ctx)
+    if not record_id:
+        return None
+    return AirtableStore(), record_id, None
 
 
 async def on_simulation_end(sim: SimulationContext) -> None:
@@ -135,20 +166,12 @@ server = AgentServer()
 @server.rtc_session(agent_name=AGENT_NAME, on_simulation_end=on_simulation_end)
 async def my_agent(ctx: JobContext):
     store: Store
-    fiksno: datetime | None = None
-    if sim := ctx.simulation_context():
-        ud = sim.userdata()
-        store = FakeStore(paket_iz_userdata(ud))
-        record_id = "recSIMULACIJA00001"
-        if ud.get("sada"):
-            fiksno = datetime.fromisoformat(ud["sada"]).replace(tzinfo=TZ)
-    else:
-        record_id = _record_id(ctx)
-        if not record_id:
-            logger.error("Kein Kandidat (record_id) – Session wird nicht gestartet")
-            ctx.shutdown(reason="no record_id")
-            return
-        store = AirtableStore()
+    initial = _initial_call_data(ctx)
+    if initial is None:
+        logger.error("Kein Kandidat (record_id) – Session wird nicht gestartet")
+        ctx.shutdown(reason="no record_id")
+        return
+    store, record_id, fiksno = initial
 
     ctx.log_context_fields = {"room": ctx.room.name, "record_id": record_id}
 
@@ -292,7 +315,7 @@ async def my_agent(ctx: JobContext):
     )
     await ctx.connect()
     # Nicht sofort reden: warten, bis der Angerufene sich meldet (Halo / Da?).
-    if ctx.simulation_context():
+    if ctx.simulation_context() or os.getenv("LINA_PREVIEW") == "1":
         return
     try:
         # Default-STT von AMD (cartesia/ink-whisper) gibt es in der EU-Region nicht;

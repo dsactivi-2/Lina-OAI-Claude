@@ -3,6 +3,36 @@
 Versionsnummer: `pyproject.toml` (Hauptversion.Funktion.Korrektur). Ablauf: `docs/DEPLOY.md`.
 „LiveKit-Version“ = ID aus `lk agent status` (für `lk agent rollback`).
 
+## 1.1.1 – für Staging vorbereitet, V3-Gesprächsrhythmus, 12.11.2026
+
+- Nur V3-Voice-Prompt: natürliche, leicht variierende Satzmelodie statt flacher Melodie;
+  Reaktionen nach Bedarf statt nach jeder Antwort; Smalltalk auf Initiative des Kandidaten;
+  keine stereotypen Komplimente, keine obligatorischen Neugier-Fragen.
+- Keine Wartefloskel bei jeder Speicherung; kurze Denkpausen zulassen; Begrüßung und
+  Verabschiedung gekürzt. Widerspruch zwischen Familienkommentar und neutraler Kinderfrage
+  im Stilteil entfernt.
+- Backend-Anweisungen, fachlicher Ablauf, Modell, Stimme und V2 bleiben in diesem Patch
+  unverändert. Vorhandene V3-Fachregeln sind damit nicht fachlich abgenommen.
+- `scenarios-gpt-live.yaml`: bisherige Pflicht-Smalltalk-Erwartung korrigiert, drei
+  Szenarien ergänzt. Übergabe und manuelle Hörprüfung: `docs/HOERTEST-V3.md`.
+- Prüfung 12.11.2026: 115 Python-Tests bestanden, inklusive V2-Golden-Test; Ruff-Lint und
+  Formatprüfung der geänderten Python-Dateien bestanden. Gesamtlauf: bestehender SIM117
+  und acht Formatabweichungen, auch im unveränderten Basis-Repository bestätigt.
+- Version 1.1.1 mit `uv lock` abgeglichen, keine Dependency-Upgrades. Sprachwechsel-Ausnahme
+  im V3-Voice-Prompt entfernt; Abschiedstest akzeptiert Groß-/Kleinschreibung.
+- Erster Audio-Lauf `SR_f74K3ow9UAVL`: 6/12 bestanden. Nachfragen trotz Zeitmangel und
+  Abweisung von „Kako si?“ im Transkript erkannt; V3-Voice-Regeln gezielt nachgeschärft.
+  Vollständiger Audio-Nachtest `SR_KcdVB2A8wAE3`: 5/12 bestanden, 7/12 fehlgeschlagen.
+  Kurze Antworten bestehen, Smalltalk wird im Transkript warm beantwortet, der Fall endet
+  aber mit 30 s Stille. Offen: Abschied vor Auflegen, Rückrufbestätigung, unbelegte
+  Speicherbestätigung und Session-Ende-Fehler. Keine Audio-Abnahme, kein Deployment.
+- Noch kein Commit, Push, Deployment oder manueller Hörvergleich. Downloads-Kopie besitzt
+  kein eigenes Git; Übernahme in bestehendes Lina-Repository angefragt. Details: `docs/HOERTEST-V3.md`.
+- `tools/deploy-v3-staging.sh`: erzeugt einen getrennten Dateistand, prüft Ruff und Pytest,
+  committet nur die angegebenen Dateien auf einem neuen Arbeitsbranch, pusht und deployt
+  den geprüften Stand nach staging. Bricht bei Fehlern ab. Kein Audio-Test im Skript;
+  die hörbare Wirkung wird anschließend manuell geprüft.
+
 ## 1.1.0 – staging, 11.11.2026 (Branch `lina-3-prompt-v2`, Git-Tag `v1.1.0-rc.1` = Commit `847c444`, LiveKit-Version `mshPFHzUFdGr`, noch nicht abgenommen)
 - Staging läuft ohne Secret mit v3 (`LIVEKIT_AGENT_DEPLOYMENT=staging`), production bleibt v2.
   Grund: LiveKit-Secrets gelten für alle Deployments eines Agents.

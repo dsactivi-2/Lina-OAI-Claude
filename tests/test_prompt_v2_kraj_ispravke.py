@@ -111,7 +111,8 @@ def test_jezik_blok_in_allen_voice_prompts(v3):
         assert "akcenat iz Bihaća" in t
         assert "/dʒob step/" in t
         assert "siječanj" in t and "Nikad siječanj" in t
-        assert "osim ako izričito traži drugi jezik" in t
+        assert "ili traži drugi jezik" in t
+        assert "osim ako izričito traži drugi jezik" not in t
     assert "{jezik}" not in prompts.voice(k, "x")
 
 

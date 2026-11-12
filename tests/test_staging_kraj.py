@@ -38,7 +38,9 @@ def test_lina_prompt_hat_vorrang(ohne_schalter):
 
 def test_kraj_prelaz_mit_abschied():
     t = prompts.KRAJ_PRELAZ
-    assert "ćao" in t and "zavrsi_razgovor" in t and "Ne čekaš kandidata" in t
+    assert (
+        "ćao" in t.casefold() and "zavrsi_razgovor" in t and "Ne čekaš kandidata" in t
+    )
     assert len(t) < 1200  # append_instructions: ≤ 500 Tokens
 
 

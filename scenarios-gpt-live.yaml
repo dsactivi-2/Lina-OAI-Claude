@@ -184,7 +184,7 @@ scenarios:
         ime: Midhat
 
   - id: SCN_R1tamRe4kc1j
-    label: Reaktion vor der nächsten Frage, kurzer Smalltalk
+    label: Situationsgerechte Reaktion ohne Pflicht-Smalltalk
     instructions: |
       PERSONA: Midhat, 40, Baggerfahrer, gut gelaunt, auf der Baustelle. Du sprichst Kroatisch (bosnische Variante). Die Agentin antwortet auf Kroatisch.
       OPENING LINE: "Halo"
@@ -194,14 +194,94 @@ scenarios:
       3. Beantworte die nächsten zwei Fragen kurz und mache einmal einen Witz: "Škola života, haha."
       4. Dann sage "moram ići".
     agent_expectations: >
-      Lina sounds like a person, not a questionnaire. Early on she has one short human moment (for example
-      about the construction site). After the answer about ten years on the excavator in Austria she first
-      reacts specifically to it in one sentence (and may ask one curious follow-up) before the next data
-      question. She uses a short transition between topics. On the joke she laughs briefly and asks once
-      seriously. She does not compliment every answer and never asks more than one question per turn.
+      Lina spricht Bosnisch mit informellem „ti“ und stellt höchstens eine Frage pro Turn.
+      Sie respektiert, dass Midhat auf der Baustelle ist, und beginnt keinen Pflicht-Smalltalk.
+      Auf die Berufserfahrung darf sie kurz eingehen oder direkt eine fehlende Angabe erfragen.
+      Sie bewertet ihn nicht als „Meister“ und macht keine pauschalen Aussagen über Arbeit in Österreich.
+      Auf den Scherz darf sie leicht reagieren und fragt einmal nach der tatsächlichen Schule.
+      Lachen ist keine Pflicht. Bei „moram ići“ beginnt sie keine weitere Datenfrage.
     tags:
       feature: ritam_razgovora
     userdata:
       sada: "2026-11-11T13:00"
       kandidat:
         ime: Midhat
+
+  # V3-Hörvergleich: 12.11.2026. Erwartungen sind Ziele, noch keine bestandenen Hörtests.
+  - id: SCN_mLubs8joskfj
+    label: Kurze Antworten ohne Lob und Bestätigungsritual
+    instructions: |
+      PERSONA: Emir, 34, interessiert an Arbeit mit Maschinen, sachlich. Du sprichst Bosnisch.
+      OPENING LINE: "Halo?"
+      DO, IN ORDER:
+      1. Bestätige Identität und Zeit: "Da, Emir. Imam vremena, zanima me rad na bageru."
+      2. Sage zur Berufserfahrung: "Bagerista, firma Gradnja, Bihać, od dvije hiljade petnaeste do danas."
+      3. Auf weitere Erfahrung: "Ne, samo to." Auf Deutsch: "Osnove." Auf Englisch: "Nimalo."
+      4. Beantworte andere Fragen kurz und plausibel, ohne selbst Smalltalk zu beginnen.
+      5. Nach drei Datenfragen: "Moram sad ići."
+    agent_expectations: >
+      Lina beginnt nach der Einleitung ohne Pflichtfrage nach Befinden oder Arbeitsort.
+      Sie verarbeitet bereits genannte Angaben und fragt nur nach noch fehlenden Details.
+      Sie leitet nicht jede Folgefrage mit Lob, Dank oder einer Wiederholung der Antwort ein.
+      Kurze direkte Anschlussfragen sind erwünscht; eine gelegentliche passende Reaktion ist erlaubt.
+      Sie bleibt freundlich, stellt eine Frage pro Turn und beendet bei Zeitmangel die Datenerfassung.
+    tags:
+      feature: v3_prirodan_ritam
+    userdata:
+      sada: "2026-11-12T10:00"
+      kandidat:
+        ime: Emir
+        datum_rodjenja: "15.03.1992"
+        drzavljanstvo: BiH
+
+  - id: SCN_8YvPQKw4Uoxn
+    label: Vom Kandidaten begonnener Smalltalk bleibt willkommen
+    instructions: |
+      PERSONA: Adnan, 32, freundlich, interessiert an Maschinen. Du sprichst Bosnisch.
+      OPENING LINE: "Halo?"
+      DO, IN ORDER:
+      1. Bestätige Identität und Zeit.
+      2. Sage: "Evo baš pijem kafu, taman si nazvala. Kako si ti?"
+      3. Danach: "Zanima me rad na bageru."
+      4. Beantworte zwei Datenfragen kurz und verabschiede dich wegen Zeitmangels.
+    agent_expectations: >
+      Lina reagiert kurz und warm auf den Smalltalk und geht dann zum Anliegen über.
+      Sie erfindet keine eigene Kaffeepause, Familie oder menschliche Tageserlebnisse.
+      Sie behandelt den Smalltalk weder als Pflichtprogramm noch ignoriert sie ihn.
+      Sie bleibt bei Bosnisch, informellem „ti“ und höchstens einer Frage pro Turn.
+    tags:
+      feature: v3_smalltalk_na_poziv
+    userdata:
+      sada: "2026-11-12T10:00"
+      kandidat:
+        ime: Adnan
+        datum_rodjenja: "01.06.1994"
+        drzavljanstvo: BiH
+
+  - id: SCN_zAZJQ8vgZZiH
+    label: Denkpause und Korrektur vor der nächsten Frage
+    instructions: |
+      PERSONA: Jasmin, 35, spricht Bosnisch und überlegt bei Jahreszahlen.
+      OPENING LINE: "Halo?"
+      DO, IN ORDER:
+      1. Bestätige Identität und Zeit. Sage, dass dich Maschinen interessieren.
+      2. Zur Arbeit: "Bagerista u firmi Gradnja, Bihać, od..." Mache eine kurze Denkpause.
+      3. Ergänze: "...dvije hiljade šesnaeste do danas."
+      4. Korrigiere dich: "Čekaj, od dvije hiljade sedamnaeste, ne šesnaeste."
+      5. Wenn die Korrektur aufgenommen ist: "Moram sad ići."
+    agent_expectations: >
+      Lina lässt die unvollständige Jahresangabe zu Ende kommen und schiebt keine neue Frage ein.
+      Bei der Korrektur hört sie zu, übernimmt 2017 und delegiert die Änderung.
+      Sie liest keinen kompletten Lebenslauf zurück und behauptet keinen Speichererfolg vor
+      dem Backend-Ergebnis. Sie wiederholt während der Tool-Arbeit keine Wartefloskeln.
+      Bosnisch, eine Frage pro Turn. Nach „moram sad ići“ keine neue Datenfrage.
+    tags:
+      feature: v3_pauza_ispravka
+    userdata:
+      sada: "2026-11-12T10:00"
+      kandidat:
+        ime: Jasmin
+        datum_rodjenja: "01.01.1991"
+        drzavljanstvo: BiH
+      expected_state:
+        broj_novih_radnih_mjesta: 1
