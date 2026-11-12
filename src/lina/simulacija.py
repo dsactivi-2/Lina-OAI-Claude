@@ -27,6 +27,7 @@ from .stanje import Stanje
 _P = {
     "ime": P.IME,
     "sifra": P.SIFRA,
+    "telefon": P.TELEFON,
     "drzavljanstvo": P.DRZAVLJANSTVO,
     "vozacka": P.VOZACKA,
     "status_boravka": P.STATUS_BORAVKA,

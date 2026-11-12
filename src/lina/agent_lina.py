@@ -18,16 +18,29 @@ from .govor import obavezno_pitanje
 from .kontekst import Kontekst, Skola, Stanica
 from .plausibilitaet import provjeri
 from .stanje import Ishod, Stanje
+from .verzija import je_v3
 from .zeit import opis, parse_termin
 
 logger = logging.getLogger("lina.agent")
 
 
-def zakazi_prekid(context, sekunde: float = 14) -> None:
-    """Poslije zahvale prekini liniju, i ako model zaboravi end_call."""
+# Sicherheitsnetz nach predji_na_kraj: Ruft das Modell zavrsi_razgovor nicht auf (Hörtest
+# 11.11.2026: Lina dankte und blieb dann still in der Leitung), legt der Code selbst auf.
+# Gespeichert wird dann über den Shutdown-Callback mit ishod_bez_kraja().
+KRAJ_REZERVA_SEKUNDE = 40.0
+
+
+def zakazi_prekid(context, sekunde: float = 14, samo_ako=None) -> None:
+    """Poslije zahvale prekini liniju, i ako model zaboravi end_call.
+
+    samo_ako: optional Bedingung, die zum Zeitpunkt des Auflegens noch gelten muss.
+    """
 
     async def _poklopi() -> None:
         await asyncio.sleep(sekunde)
+        if samo_ako is not None and not samo_ako():
+            return
+        logger.info("prekid poziva poslije %.0f s", sekunde)
         try:
             context.session.shutdown(drain=True)
         except TypeError:
@@ -39,6 +52,16 @@ def zakazi_prekid(context, sekunde: float = 14) -> None:
         asyncio.get_running_loop().create_task(_poklopi())
     except RuntimeError:
         logger.exception("nema petlje za prekid")
+
+
+def _poruka_sacuvano() -> str:
+    """Antwort von zavrsi_razgovor. v2 bleibt wörtlich wie in Produktion."""
+    if not je_v3():
+        return "Sačuvano. Zahvali se u jednoj rečenici i pozovi end_call. Poziv se prekida sam."
+    return (
+        "Sačuvano. Ako se još nisi oprostila, kratko „ugodan ti dan, ćao“, pa odmah end_call. "
+        "Poziv se prekida sam."
+    )
 
 
 def _cinjenice(
@@ -173,6 +196,28 @@ class LinaAgent(Agent):
         self.stanje.pitani_nalazi.add(kljuc)
         return f"PITAJ [{kljuc}] {pitanje} PITAJ ODMAH, jedno pitanje, bez optužbe. Prihvati odgovor."
 
+    @staticmethod
+    def _po_broju(sve: list, redni_broj: int, sta: str):
+        """Eintrag zur Nummer über alle Einträge (Airtable zuerst, dann Lina), sonst Hinweis."""
+        if not 1 <= redni_broj <= len(sve):
+            return None, (
+                f"Nepostojeći redni broj. Brojevi za {sta}: 1–{len(sve)} "
+                "(prvo već upisani iz prijave, pa novi). Ne dodaj ponovo; pitaj kandidata koji misli."
+            )
+        return sve[redni_broj - 1], ""
+
+    def _ispravka_postojeceg(
+        self, vrsta: str, redni_broj: int, opis: str, polje: str, vrijednost: str
+    ) -> str:
+        """Airtable-Einträge werden nie überschrieben: Korrektur als Notiz für das Team."""
+        self.stanje.napomene_provjere[f"ISPRAVKA:{vrsta}:{redni_broj}"] = (
+            f"{opis} → {polje}: {(vrijednost or '').strip()}"
+        )
+        return (
+            "Zabilježeno kao ispravka već upisanog podatka; kolege će ga ažurirati. "
+            "Ne dodaj ga ponovo i ne pitaj ponovo."
+        )
+
     # ---------- einzelne Angaben ----------
 
     @function_tool
@@ -204,7 +249,7 @@ class LinaAgent(Agent):
             extra = await self._mjesto_odmah(
                 "MAPA:adresa",
                 "Samo da provjerim — ta ulica je u tom gradu?",
-                mapa.ulica_u_gradu(w),
+                await asyncio.to_thread(mapa.ulica_u_gradu, w),
             )
         if polje == "datum_rodjenja" and self.stanje.dob_iznad_granice():
             extra = (
@@ -260,7 +305,7 @@ class LinaAgent(Agent):
                 izvor="lina",
             )
         )
-        n = len(self.stanje.nove_stanice)
+        n = len(self.stanje.sve_stanice)
         extra = self._logika_odmah()
         return f"Sačuvano kao radno mjesto broj {n}." + (f"\n{extra}" if extra else "")
 
@@ -268,16 +313,22 @@ class LinaAgent(Agent):
     async def ispravi_radno_mjesto(
         self, context: RunContext, redni_broj: int, polje: PoljeRada, vrijednost: str
     ) -> str:
-        """Korrigiert eine von Lina erfasste Berufsstation.
+        """Korrigiert eine Berufsstation. Nummern zählen zuerst die schon in der Bewerbung
+        vorhandenen Stationen, dann die neuen aus dodaj_radno_mjesto. Eine Station aus der
+        Bewerbung wird nicht geändert, sondern als Korrekturnotiz für das Team vermerkt.
 
         Args:
-            redni_broj: Nummer aus dodaj_radno_mjesto (1, 2, ...).
+            redni_broj: Nummer (1, 2, ...), siehe oben.
             polje: Welches Feld.
             vrijednost: Neuer Wert (Datum als YYYY oder YYYY-MM, aktuelno als 'da'/'ne').
         """
-        if not 1 <= redni_broj <= len(self.stanje.nove_stanice):
-            return "Nepostojeći redni broj."
-        s = self.stanje.nove_stanice[redni_broj - 1]
+        s, greska = self._po_broju(self.stanje.sve_stanice, redni_broj, "radno mjesto")
+        if greska:
+            return greska
+        if s.izvor != "lina":
+            return self._ispravka_postojeceg(
+                "posao", redni_broj, s.kratko(), polje, vrijednost
+            )
         if polje in ("od", "do"):
             d, e = _datum(vrijednost, kraj=polje == "do")
             if e:
@@ -331,13 +382,14 @@ class LinaAgent(Agent):
                 izvor="lina",
             )
         )
+        n = len(self.stanje.sve_skole)
         extra = self._logika_odmah()
         mjesto = await self._mjesto_odmah(
-            f"MAPA:skola:{len(self.stanje.nove_skole)}",
+            f"MAPA:skola:{n}",
             "Samo da provjerim — ta škola je u tom gradu?",
-            mapa.skola_u_gradu(skola, adresa_skole),
+            await asyncio.to_thread(mapa.skola_u_gradu, skola, adresa_skole),
         )
-        dijelovi = [f"Sačuvano kao škola broj {len(self.stanje.nove_skole)}."]
+        dijelovi = [f"Sačuvano kao škola broj {n}."]
         if extra:
             dijelovi.append(extra)
         if mjesto:
@@ -348,16 +400,22 @@ class LinaAgent(Agent):
     async def ispravi_skolu(
         self, context: RunContext, redni_broj: int, polje: PoljeSkole, vrijednost: str
     ) -> str:
-        """Korrigiert eine von Lina erfasste Schule.
+        """Korrigiert eine Schule. Nummern zählen zuerst die schon in der Bewerbung vorhandenen
+        Schulen, dann die neuen aus dodaj_skolu. Eine Schule aus der Bewerbung wird nicht geändert,
+        sondern als Korrekturnotiz für das Team vermerkt; nie dieselbe Schule erneut hinzufügen.
 
         Args:
-            redni_broj: Nummer aus dodaj_skolu (1, 2, ...).
+            redni_broj: Nummer (1, 2, ...), siehe oben.
             polje: Welches Feld.
             vrijednost: Neuer Wert.
         """
-        if not 1 <= redni_broj <= len(self.stanje.nove_skole):
-            return "Nepostojeći redni broj."
-        s = self.stanje.nove_skole[redni_broj - 1]
+        s, greska = self._po_broju(self.stanje.sve_skole, redni_broj, "škola")
+        if greska:
+            return greska
+        if s.izvor != "lina":
+            return self._ispravka_postojeceg(
+                "skola", redni_broj, s.kratko(), polje, vrijednost
+            )
         if polje in ("od", "do"):
             d, e = _datum(vrijednost, kraj=polje == "do")
             if e:
@@ -378,7 +436,7 @@ class LinaAgent(Agent):
             mjesto = await self._mjesto_odmah(
                 f"MAPA:skola:{redni_broj}",
                 "Samo da provjerim — ta škola je u tom gradu?",
-                mapa.skola_u_gradu(s.skola, s.adresa),
+                await asyncio.to_thread(mapa.skola_u_gradu, s.skola, s.adresa),
             )
         dijelovi = ["Ispravljeno."]
         if extra:
@@ -480,21 +538,44 @@ class LinaAgent(Agent):
             )
             return "Spremanje nije uspjelo, ali se ljubazno oprosti od kandidata. Kolege će provjeriti."
         zakazi_prekid(context)
-        return "Sačuvano. Zahvali se u jednoj rečenici i pozovi end_call. Poziv se prekida sam."
+        return _poruka_sacuvano()
 
     @function_tool
     async def predji_na_kraj(self, context: RunContext):
-        """Kad su podaci gotovi ili kandidat mora ići: predaj završetak (zahvala, end_call)."""
+        """Kad su podaci gotovi ili kandidat mora ići: prelazak na kraj razgovora
+        (zahvala, zavrsi_razgovor, end_call). Poslije toga se ne pitaju nova polja."""
+        duplex = None
+        if je_v3():  # v2 bleibt beim Handoff wie in Produktion
+            try:
+                duplex = self.duplex_session
+            except RuntimeError:
+                duplex = None
+        if duplex is None:
+            # v2, oder ohne Duplex-Session (Tests, andere Modelle): klassischer Handoff.
+            return (
+                KrajAgent(
+                    stanje=self.stanje,
+                    store=self.store,
+                    kontekst=self.kontekst,
+                    vrijeme=self.vrijeme,
+                    chat_ctx=self.chat_ctx.copy(exclude_instructions=True),
+                    tools=list(self.extra_tools),
+                ),
+                "Predaj kraj razgovora.",
+            )
+        # GPT-Live: ein Handoff mit neuen Instruktionen startet eine neue Modell-Session. Im
+        # Testanruf vom 11.11.2026 hieß das 13 s Stille, ein verworfener Kandidaten-Turn und eine
+        # wiederholte Frage. Deshalb bleibt die Session offen: Kraj-Regeln anhängen (≤ 500 Tokens),
+        # Daten-Tools entziehen, zavrsi_razgovor und end_call behalten.
+        duplex.append_instructions(prompts.KRAJ_PRELAZ)
+        await self.update_tools([*self.extra_tools, self.zavrsi_razgovor])
+        stanje = self.stanje
+        zakazi_prekid(
+            context, sekunde=KRAJ_REZERVA_SEKUNDE, samo_ako=lambda: stanje.ishod is None
+        )
         return (
-            KrajAgent(
-                stanje=self.stanje,
-                store=self.store,
-                kontekst=self.kontekst,
-                vrijeme=self.vrijeme,
-                chat_ctx=self.chat_ctx.copy(exclude_instructions=True),
-                tools=list(self.extra_tools),
-            ),
-            "Predaj kraj razgovora.",
+            "Faza kraj: odmah toplo zahvali i oprosti se (kolege pregledaju podatke i javljaju se, "
+            "„ugodan ti dan, ćao“), pa odmah zavrsi_razgovor, pa end_call. Ne pitaj nova polja."
         )
 
 
@@ -559,7 +640,7 @@ class PozdravAgent(Agent):
             )
             return "Spremanje nije uspjelo, ali se ljubazno oprosti od kandidata."
         zakazi_prekid(context)
-        return "Sačuvano. Zahvali se u jednoj rečenici i pozovi end_call. Poziv se prekida sam."
+        return _poruka_sacuvano()
 
     @function_tool
     async def nastavi_prikupljanje(self, context: RunContext):
@@ -605,6 +686,31 @@ class KrajAgent(Agent):
         # eigenen @function_tool-Methoden: sonst doppelte Namen beim Handoff.
         self.extra_tools = list(tools or [])
 
+    async def on_enter(self) -> None:
+        # Nur im Handoff-Pfad (ohne Duplex-Phasenwechsel): GPT-Live startet hier eine neue
+        # Modell-Session und spricht nicht von selbst. Deshalb die Zahvala sofort anstoßen.
+        # v2 hatte kein on_enter und bleibt so.
+        if not je_v3():
+            return
+        try:
+            handle = self.session.generate_reply(
+                instructions=(
+                    "Zahvali kratko, reci da će kolege pregledati podatke i javiti se, "
+                    "pa zavrsi_razgovor. Ne pitaj nova polja."
+                )
+            )
+        except Exception:
+            logger.exception("kraj: generate_reply nije uspio")
+            return
+
+        def _provjeri(h) -> None:
+            # GPT-Live wertet eine Aufforderung nach 10 s als abgelehnt; dann greift das Auflegen
+            # aus predji_na_kraj bzw. der Shutdown-Callback.
+            if (exc := h.exception()) is not None:
+                logger.warning("kraj: zahvala nije izgovorena: %s", type(exc).__name__)
+
+        handle.add_done_callback(_provjeri)
+
     @function_tool
     async def zavrsi_razgovor(
         self,
@@ -626,4 +732,4 @@ class KrajAgent(Agent):
             )
             return "Spremanje nije uspjelo. Oprosti se i pozovi end_call."
         zakazi_prekid(context)
-        return "Sačuvano. Zahvali se u jednoj rečenici i pozovi end_call. Poziv se prekida sam."
+        return _poruka_sacuvano()

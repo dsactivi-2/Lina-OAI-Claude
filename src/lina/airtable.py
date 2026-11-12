@@ -140,7 +140,10 @@ def napravi_zapise(stanje: Stanje) -> dict[str, list[Fields]]:
                 f"Škola '{sk.skola}': smjer {sk.smjer or '?'}, stepen {sk.stepen or '?'}"
             )
     for kljuc, odgovor in stanje.napomene_provjere.items():
-        notiz.append(f"Provjera {kljuc}: {odgovor}")
+        if kljuc.startswith("ISPRAVKA:"):
+            notiz.append(f"Ispravka {kljuc[len('ISPRAVKA:') :]}: {odgovor}")
+        else:
+            notiz.append(f"Provjera {kljuc}: {odgovor}")
 
     dop: Fields = {
         D.KANDIDAT: [rid],

@@ -68,3 +68,140 @@ scenarios:
       sada: "2026-11-10T13:00"
       kandidat:
         ime: Midhat
+
+  # --- Nach dem Testanruf vom 11.11.2026 (Raum console-910531c4): zu lange Antworten, 13 s Stille am
+  # --- Ende, „ne mogu provjeriti“ bei der Telefonnummer, kroatische Wörter. Branch lina-3-prompt-v2.
+  - id: SCN_q7Pl4tJ3dn0A
+    label: Frage nach Gehalt – eine Antwort, dann zurück zur fehlenden Angabe
+    instructions: |
+      PERSONA: Midhat, 40, Dachdecker, hat es eilig. Du sprichst Kroatisch (bosnische Variante). Die Agentin antwortet auf Kroatisch.
+      OPENING LINE: "Halo"
+      DO, IN ORDER:
+      1. Bestätige Identität und Zeit: "Jesam, imam dvije minute."
+      2. Sage, dass du die Stelle schon kennst und dich die Maschinen interessieren.
+      3. Frage nur: "Kolika je plata?" und warte.
+      4. Nach der Antwort sage nur "Dobro." und warte, ob Lina weiterfragt.
+      5. Beantworte eine Frage kurz, dann "moram ići".
+    agent_expectations: >
+      On "Kolika je plata?" Lina gives the pay from the knowledge block in at most two sentences and then asks
+      ONE question about a missing field. She does not add housing, conditions, casting or travel unasked, and
+      she does not recite the full job offer when the candidate already knows the position. Amounts are spoken
+      in Bosnian words with "hiljade", never "tisuća".
+    tags:
+      feature: jedan_odgovor_stani
+    userdata:
+      sada: "2026-11-11T13:00"
+      kandidat:
+        ime: Midhat
+        telefon: "+387 61 000 000"
+
+  - id: SCN_Kr4jB3zP4uz3
+    label: Abschluss sofort, ohne Pause und ohne neue oder wiederholte Fragen
+    instructions: |
+      PERSONA: Midhat, 40, Dachdecker. Du sprichst Kroatisch (bosnische Variante). Die Agentin antwortet auf Kroatisch.
+      OPENING LINE: "Halo"
+      DO, IN ORDER:
+      1. Bestätige Identität und Zeit.
+      2. Beantworte die erste Frage zur Arbeit: "Krovopokrivač, firma Krov, Bihać, od dvije hiljade petnaeste do danas."
+      3. Sage dann sofort: "Slušaj, moram ići, zovu me na gradilište."
+      4. Falls Lina noch etwas fragt, antworte nur "Ne mogu sad." Lege auf, nachdem sie sich bedankt hat.
+    agent_expectations: >
+      After "moram ići" Lina asks no new field and does not repeat a question she already asked (for example
+      about work experience). Her next turn comes promptly and is a short thank-you saying the colleagues will
+      review the data and get back; no long silence, no new greeting, no promise about the casting or
+      suitability. Then the call ends.
+    tags:
+      feature: kraj_bez_pauze
+    userdata:
+      sada: "2026-11-11T13:00"
+      kandidat:
+        ime: Midhat
+      expected_state:
+        broj_novih_radnih_mjesta: 1
+
+  - id: SCN_T3l3f0nIm4m0
+    label: Telefonnummer ist schon da – nicht erfragen, nicht vorlesen, nicht „kann ich nicht prüfen“
+    instructions: |
+      PERSONA: Midhat. Du sprichst Kroatisch (bosnische Variante). Die Agentin antwortet auf Kroatisch.
+      OPENING LINE: "Halo"
+      DO, IN ORDER:
+      1. Bestätige Identität und Zeit.
+      2. Sage ungefragt: "Da ti dam i broj telefona, da me možete dobiti."
+      3. Nach Linas Antwort beantworte eine Frage kurz und sage dann "moram ići".
+    agent_expectations: >
+      Lina says the phone number is already in the application ("to već imamo") and neither asks for it nor
+      reads it back nor says she cannot check it. She continues with one missing field.
+    tags:
+      feature: imamo_iz_prijave
+    userdata:
+      sada: "2026-11-11T13:00"
+      kandidat:
+        ime: Midhat
+        telefon: "+387 61 000 000"
+
+  - id: SCN_B0s4nsk1H1lj
+    label: Bosnisches Vokabular, auch wenn der Kandidat kroatische Wörter benutzt
+    instructions: |
+      PERSONA: Midhat, 40, redet mit kroatischen Wörtern. Du sprichst Kroatisch. Die Agentin antwortet auf Kroatisch.
+      OPENING LINE: "Halo"
+      DO, IN ORDER:
+      1. Bestätige Identität und Zeit.
+      2. Frage: "Koliko tisuća eura je plaća, i koliko tjedana sam na terenu?"
+      3. Danach beantworte eine Frage und sage, du hast die Schule "u rujnu dvije tisuće devete" beendet.
+      4. Verabschiede dich.
+    agent_expectations: >
+      Lina answers in Bosnian only: "hiljada" (never "tisuća"), "sedmica" (never "tjedan"), "plata", and
+      Bosnian month names (septembar, never rujan) when she repeats the school date. She keeps Bosnian wording
+      even though the candidate uses Croatian, and uses no German or English fillers like "okej" or "super".
+    tags:
+      feature: bosanski_leksik
+    userdata:
+      sada: "2026-11-11T13:00"
+      kandidat:
+        ime: Midhat
+
+  # --- Hörtest 11.11.2026 (lokal, v3): kein Abschied, kein Auflegen, kein Smalltalk.
+  - id: SCN_Ab5chi3dCa0x
+    label: Abschluss mit warmem Abschied, dann legt Lina auf
+    instructions: |
+      PERSONA: Midhat, 40, Dachdecker. Du sprichst Kroatisch (bosnische Variante). Die Agentin antwortet auf Kroatisch.
+      OPENING LINE: "Halo"
+      DO, IN ORDER:
+      1. Bestätige Identität und Zeit.
+      2. Beantworte die erste Frage kurz.
+      3. Sage: "Moram ići, žena me zove."
+      4. Sage danach nichts mehr und warte.
+    agent_expectations: >
+      After "moram ići" Lina thanks the candidate warmly and personally, says the colleagues will review
+      the data and get back, and clearly says goodbye ("ugodan dan", "ćao" or "doviđenja") in the same turn.
+      She does not say coldly "imam sve što mi treba" and asks nothing new. The call then ends without
+      the candidate having to hang up.
+    tags:
+      feature: kraj_oprostaj
+    userdata:
+      sada: "2026-11-11T13:00"
+      kandidat:
+        ime: Midhat
+
+  - id: SCN_R1tamRe4kc1j
+    label: Reaktion vor der nächsten Frage, kurzer Smalltalk
+    instructions: |
+      PERSONA: Midhat, 40, Baggerfahrer, gut gelaunt, auf der Baustelle. Du sprichst Kroatisch (bosnische Variante). Die Agentin antwortet auf Kroatisch.
+      OPENING LINE: "Halo"
+      DO, IN ORDER:
+      1. Bestätige Identität und Zeit: "Može, na gradilištu sam, ali reci."
+      2. Auf die Frage zur Arbeit: "Deset godina na bageru, zadnje četiri u Austriji."
+      3. Beantworte die nächsten zwei Fragen kurz und mache einmal einen Witz: "Škola života, haha."
+      4. Dann sage "moram ići".
+    agent_expectations: >
+      Lina sounds like a person, not a questionnaire. Early on she has one short human moment (for example
+      about the construction site). After the answer about ten years on the excavator in Austria she first
+      reacts specifically to it in one sentence (and may ask one curious follow-up) before the next data
+      question. She uses a short transition between topics. On the joke she laughs briefly and asks once
+      seriously. She does not compliment every answer and never asks more than one question per turn.
+    tags:
+      feature: ritam_razgovora
+    userdata:
+      sada: "2026-11-11T13:00"
+      kandidat:
+        ime: Midhat

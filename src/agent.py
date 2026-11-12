@@ -29,7 +29,7 @@ from livekit.agents import (
 from livekit.agents.beta import EndCallTool
 from livekit.plugins import ai_coustics
 
-from lina import prompts
+from lina import jezik, prompts, verzija
 from lina.agent_lina import PozdravAgent
 from lina.airtable import AirtableStore, FakeStore, Store, sacuvaj
 from lina.dialog import DialogProtokoll
@@ -103,6 +103,32 @@ def _tekst_iz_historije(history) -> str:
     return "\n".join(linije)
 
 
+def _responses_options(kontekst, vrijeme: str) -> dict:
+    """Backend-Modell hinter GPT-Live (responses_options, Doku /agents/models/realtime/gpt-live).
+
+    Im Testanruf vom 11.11.2026 dauerten Backend-Antworten mit Standard-Reasoning und 8–18k
+    Input-Tokens 4–6 s, hörbar als Pausen. LiveKit reicht reasoning, text und max_output_tokens
+    durch (gpt_live.py, _build_delegation). Leere Umgebungsvariable = Option weglassen.
+    """
+    opts: dict = {
+        "model": os.getenv("LINA_BACKEND_MODEL", "gpt-5.6-luna"),
+        "instructions": prompts.backend(kontekst, vrijeme),
+    }
+    if not verzija.je_v3():  # v2 bleibt wie in Produktion (OpenAI-Standard)
+        return opts
+    if effort := os.getenv("LINA_BACKEND_REASONING", "low").strip():
+        opts["reasoning"] = {"effort": effort}
+    if verbosity := os.getenv("LINA_BACKEND_VERBOSITY", "low").strip():
+        opts["text"] = {"verbosity": verbosity}
+    # Reasoning-Tokens zählen mit; ein zu kleines Limit bricht Tool-Aufrufe ab. Darum nur opt-in.
+    if max_tokens := os.getenv("LINA_BACKEND_MAX_TOKENS", "").strip():
+        try:
+            opts["max_output_tokens"] = max(16, int(max_tokens))
+        except ValueError:
+            logger.warning("LINA_BACKEND_MAX_TOKENS ist keine Zahl, wird ignoriert")
+    return opts
+
+
 server = AgentServer()
 
 
@@ -162,13 +188,11 @@ async def my_agent(ctx: JobContext):
     session = AgentSession(
         llm=inference.DuplexModel(
             model="openai/gpt-live-1",
+            # GPT-Live hat keine bosnische Stimme (Stand 11.11.2026); marin ist der Standard.
+            # Vor einem Wechsel die Kombination Stimme + Jezik-Block anhören (OpenAI: „Audition
+            # the actual combination of voice and instructions“).
             voice=os.getenv("LINA_VOICE", "marin"),
-            extra_kwargs={
-                "responses_options": {
-                    "model": os.getenv("LINA_BACKEND_MODEL", "gpt-5.6-luna"),
-                    "instructions": prompts.backend(kontekst, vrijeme),
-                },
-            },
+            extra_kwargs={"responses_options": _responses_options(kontekst, vrijeme)},
         ),
         # GPT-Live steuert Turns selbst; eine VAD ist nötig, damit Barge-in die Wiedergabe stoppt.
         vad=inference.VAD(model="silero"),
@@ -190,6 +214,37 @@ async def my_agent(ctx: JobContext):
     @session.on("conversation_item_added")
     def _dialog_item(ev: ConversationItemAddedEvent) -> None:
         protokoll.dodaj(ev.item)
+
+    # Jezička korektura: GPT-Live kroz LiveKit nema keyword biasing. Hrvatska riječ ili
+    # njemački/engleski uzvik u Lininom tekstu → kratka napomena u instrukcije (≤ 500 Tokens),
+    # najviše jezik.MAX_ISPRAVKI puta po pozivu. Geloggt werden nur die Ersatzwörter.
+    ispravke_jezika: list[str] = []  # schon korrigierte Ersatzwörter
+    napomene_jezika = [0]  # gesendete Hinweise, höchstens jezik.MAX_ISPRAVKI
+
+    @session.on("conversation_item_added")
+    def _jezik_item(ev: ConversationItemAddedEvent) -> None:
+        item = ev.item
+        if getattr(item, "role", None) != "assistant" or not verzija.je_v3():
+            return
+        if napomene_jezika[0] >= jezik.MAX_ISPRAVKI:
+            return
+        novi = [
+            n
+            for n in jezik.nalazi(getattr(item, "text_content", "") or "")
+            if n.zamjena not in ispravke_jezika
+        ]
+        if not novi:
+            return
+        try:
+            session.current_agent.duplex_session.append_instructions(
+                jezik.napomena(novi)
+            )
+        except Exception:
+            logger.debug("jezička napomena nije poslana", exc_info=True)
+            return
+        ispravke_jezika.extend(n.zamjena for n in novi)
+        napomene_jezika[0] += 1
+        logger.info("jezička korektura: %s", ", ".join(n.zamjena for n in novi))
 
     @session.on("close")
     def _dialog_kraj(ev: CloseEvent) -> None:

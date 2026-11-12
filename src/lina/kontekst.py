@@ -19,7 +19,7 @@ from .config import (
     P,
 )
 from .datumi import Datum, parse_datum
-from .verzija import granica_godina
+from .verzija import granica_godina, je_v3
 
 Fields = dict[str, Any]
 
@@ -31,7 +31,9 @@ def _skola_ok(naziv: str) -> bool:
 
     s = unicodedata.normalize("NFKD", naziv or "")
     s = "".join(c for c in s if not unicodedata.combining(c)).lower()
-    return any(w in s for w in ("skol", "gimnaz", "fakultet", "univerzitet", "akademij"))
+    return any(
+        w in s for w in ("skol", "gimnaz", "fakultet", "univerzitet", "akademij")
+    )
 
 
 def prazno(v: Any) -> bool:
@@ -100,6 +102,7 @@ class Kontekst:
     stanice: list[Stanica] = field(default_factory=list)
     skole: list[Skola] = field(default_factory=list)
     datum_rodjenja: Datum | None = None
+    poznata_polja: list[str] = field(default_factory=list)  # oznake, bez vrijednosti
 
     def za_instrukcije(self) -> str:
         """Bosnischer Block für die Instruktionen. Enthält keine Rohdaten aus Airtable."""
@@ -113,6 +116,12 @@ class Kontekst:
             "Podaci koji NEDOSTAJU (pitaj samo ovo, ovim redom):",
             nedostaje,
         ]
+        if self.poznata_polja and je_v3():  # v2 bleibt wie in Produktion
+            linije.append(
+                "Već imamo iz prijave (NE pitaj, NE čitaj naglas, ne traži potvrdu): "
+                + ", ".join(self.poznata_polja)
+                + ". Ako kandidat to sam spomene ili ponudi: „To već imamo iz prijave, hvala.“"
+            )
         if self.poznato_iskustvo:
             linije.append(
                 "Već upisano radno iskustvo (NE pitaj ponovo; samo jednom pitaj ima li još nešto):\n"
@@ -232,6 +241,17 @@ def izracunaj(
         if not vorhanden:
             nedostaje.append(p.key)
 
+    # Was schon da ist, nur als Bezeichnung: der Prompt soll „das haben wir schon“ sagen können,
+    # ohne Rohdaten zu sehen. Telefon gehört dazu, obwohl es nie abgefragt wird.
+    poznata_polja: list[str] = []
+    if not prazno(kandidat.get(P.TELEFON)):
+        poznata_polja.append("broj telefona")
+    for p in PITANJA:
+        if p.key in ("radno_iskustvo", "obrazovanje") or not p.abfragen:
+            continue
+        if p.key not in nedostaje:
+            poznata_polja.append(p.label)
+
     dr = parse_datum(
         _tekst(kandidat.get(P.DATUM_RODJENJA_DATE)), kraj=False
     ) or parse_datum(_tekst(kandidat.get(P.DATUM_RODJENJA_TXT)), kraj=False)
@@ -246,4 +266,5 @@ def izracunaj(
         stanice=stanice,
         skole=skole,
         datum_rodjenja=dr,
+        poznata_polja=poznata_polja,
     )

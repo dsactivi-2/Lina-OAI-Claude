@@ -3,6 +3,36 @@
 Versionsnummer: `pyproject.toml` (Hauptversion.Funktion.Korrektur). Ablauf: `docs/DEPLOY.md`.
 „LiveKit-Version“ = ID aus `lk agent status` (für `lk agent rollback`).
 
+## 1.1.0 – staging, 11.11.2026 (Branch `lina-3-prompt-v2`, Git-Tag `v1.1.0-rc.1` = Commit `847c444`, LiveKit-Version `mshPFHzUFdGr`, noch nicht abgenommen)
+- Staging läuft ohne Secret mit v3 (`LIVEKIT_AGENT_DEPLOYMENT=staging`), production bleibt v2.
+  Grund: LiveKit-Secrets gelten für alle Deployments eines Agents.
+- Nach dem Testanruf vom 11.11.2026 (andere Claude-Sitzung, Punkte 1–8 und 10 der Analyse,
+  Sprachpunkte 1–3 und 6):
+  - Abschluss ohne neue GPT-Live-Session (`append_instructions` + `update_tools`), sonst Handoff
+    mit `KrajAgent.on_enter`.
+  - Backend `reasoning`/`verbosity` = low (`LINA_BACKEND_REASONING`, `LINA_BACKEND_VERBOSITY`,
+    `LINA_BACKEND_MAX_TOKENS` opt-in).
+  - v3-Prompt: Ponuda nur auf Wunsch, „nur das Gefragte beantworten“, Kinderfrage ohne Turnus,
+    Speichern nach jeder Antwort, gemeinsamer Sprachblock (Akzent Bihać, IPA, Wortliste).
+  - „Već imamo iz prijave“ im Kontext (nur Feldnamen, keine Werte).
+  - Korrekturen an Stationen/Schulen über alle Einträge; Einträge aus der Bewerbung werden nicht
+    geändert, sondern als „Ispravka …“ in Dopune vermerkt.
+  - Kartenabfragen in einem Thread; `jezik.py` korrigiert kroatische/ekavische Wörter im Gespräch.
+  - 4 Szenarien in `scenarios-gpt-live.yaml`.
+- Hörtest 11.11.2026: Lina verabschiedete sich nicht und legte nicht auf. Jetzt: warmer Abschied
+  mit „ćao“ in derselben Antwort, und 40 s nach `predji_na_kraj` legt der Code auf, falls
+  `zavrsi_razgovor` nicht kam (gespeichert wird dann über `ishod_bez_kraja()`).
+- v2 eingefroren: Kontextzeile „Već imamo“, Abschluss ohne Session, `KrajAgent.on_enter`, Backend
+  low, Sprachkorrektur und der neue Text von `zavrsi_razgovor` wirken nur in v3.
+  `tests/test_v2_eingefroren.py` prüft die v2-Prompts zeichengleich gegen `lina-v2.0-prod`.
+  Für v2 wirken mit Absicht: Nummerierung der Korrekturen über alle Einträge (Fehlerkorrektur,
+  die Tool-Beschreibungen gelten für beide), Kartenabfragen im Thread, Tool-Beschreibungen.
+- v3-Prompt: Abschnitt „Ritam razgovora“ mit kurzem menschlichem Einstieg, Reaktion vor jeder
+  nächsten Frage, einer Neugier-Frage pro Station, Übergängen und Reaktionsbausteinen (nach Alma).
+- Sprachkorrektur zählt Hinweise statt Wörter; `on_enter` prüft das Ergebnis von `generate_reply`.
+- 2 Szenarien: Abschied mit Auflegen, Gesprächsrhythmus.
+- Offen: Unterbrechungsschwellen (Hörtest), Stimmenwahl per Anhören, Beispielsätze aus Bihać.
+
 ## 3.0.0 – in Arbeit (Branch `lina-3-prompt`, noch nicht abgenommen)
 - Umschaltbar über `LINA_PROMPT` (`v2` Standard, `v3` neu); Langfuse-Metadatum `lina.prompt_verzija`.
 - `prompts_v2.py` + `docs/knowledge/znanje-lina-v2.md`: eingefrorener Produktions-Prompt (geprüft zeichengleich mit `af8cfbb`).

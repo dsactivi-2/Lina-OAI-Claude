@@ -71,3 +71,7 @@ GEMINI.md
 .github/copilot-instructions.md
 .github/personal-instructions.md
 .github/instructions/
+
+# Lokale Testanruf-Dateien (können Telefonnummern enthalten), nie ins Image
+testanruf*.json
+allowlist-testanruf.json
