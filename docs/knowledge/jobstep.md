@@ -1,3 +1,7 @@
+---
+title: Znanje o Job-Stepu
+---
+
 # Znanje o Job-Stepu
 
 > Izvor: Denis, 11.11.2026 (ispravlja starije podatke s job-step.com). Učitava se samo u Linu v3.

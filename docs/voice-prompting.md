@@ -1,3 +1,7 @@
+---
+title: Voice-Prompting – Prinzipien und Checkliste
+---
+
 # Voice-Prompting: Prinzipien und Checkliste
 
 Grundlage: LiveKit Prompting Guide (`/agents/start/prompting`) und GPT-Live-Doku, Stand 05.11.2026. Dies ist eine eigene Zusammenfassung, für Details gilt das Original (über `reading-livekit-docs` abrufbar).

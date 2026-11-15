@@ -1,3 +1,7 @@
+---
+title: Plausibilitätsprüfung (Logikfehler)
+---
+
 # Plausibilitätsprüfung (Logikfehler)
 
 **Prinzip:** Die Prüfung macht der **Code**, nicht das Modell, weil Datumsrechnung im Code zuverlässig ist.

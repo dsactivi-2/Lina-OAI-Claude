@@ -1,3 +1,7 @@
+---
+title: Znanje za Linu v2 (NACRT)
+---
+
 # Znanje za Linu (NACRT)
 
 > Status: plata po DS 08.11.2026. Pozicije i uslovi po Dinku. Lina govori SAMO ovo, i samo ako kandidat pita. Ne recituje ponudu na startu poziva.

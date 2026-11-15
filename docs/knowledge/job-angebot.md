@@ -1,3 +1,7 @@
+---
+title: Jobangebot (Wissensbasis für Lina)
+---
+
 # Jobangebot (Wissensbasis für Lina)
 
 > **Status: ENTWURF aus Lina v2 (`prompts.py`), wird überarbeitet.** Wir beschreiben den Job gemeinsam neu und genauer. Bis dahin gilt: Nur das sagen, was hier steht.

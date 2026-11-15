@@ -64,7 +64,7 @@ Pflicht laut `CLAUDE.md`: erst Szenario, dann bauen.
 ### 3.1 Behalten
 - Drei Phasen `VOICE_POZDRAV` → `VOICE` → `VOICE_KRAJ` und `BACKEND`.
 - `_ZAJEDNICKO` mit den offiziellen Überschriften **Backchannel policy, Interruption policy, Delegation policy** (OpenAI verlangt diese Überschriften).
-- `_delegacija()` pro Phase mit `<|SpawnThinking|>` (`:61-100`). **Hinweis:** `main` hat diese Regeln bereits; die ältere Fassung auf `dev` wird nicht übernommen.
+- `_delegacija()` pro Phase mit `<\|SpawnThinking\|>` (`:61-100`). **Hinweis:** `main` hat diese Regeln bereits; die ältere Fassung auf `dev` wird nicht übernommen.
 - Wortliste kroatisch → bosnisch inkl. Monate (`:112-116`), Verbot „okej / super / danke“ (`:117-118`).
 - Sprachen: erst Deutsch, dann Englisch, getrennt (`:193-195`).
 - Ehrlichkeit, Vertrauen, Ispravke, „Halo“, Oproštaj (`_ZAJEDNICKO`).
@@ -84,7 +84,7 @@ Pflicht laut `CLAUDE.md`: erst Szenario, dann bauen.
 - Pausenpflicht nach „aha/dobro“ (`:124-125`, `:163`) → **eine** Tempo-Regel nach Situation, ohne lange Stille.
 - Dreifache Tempo-Regel (`:124`, `:128`, `:153`) → eine.
 - Doppelte Unterbrechungsregel in „Glas i emocije“ (`:167-168`) → steht schon in `_ZAJEDNICKO`.
-- „Kratko čekanje“ (`:169-170`) und Backend-Regel 9 (`:263-264`) → **Verhalten während Tools:** erst `<|SpawnThinking|>`, dann höchstens ein kurzer Satz, dann warten, nie Fortschritt oder Ergebnis erfinden.
+- „Kratko čekanje“ (`:169-170`) und Backend-Regel 9 (`:263-264`) → **Verhalten während Tools:** erst `<\|SpawnThinking\|>`, dann höchstens ein kurzer Satz, dann warten, nie Fortschritt oder Ergebnis erfinden.
 - Floskel-Empathie-Beispiele, die als Standardsätze wirken, auf Stilbeispiele reduzieren.
 
 ### 3.4 Ändern (Entscheidungen E3–E6)
@@ -182,7 +182,7 @@ docs/knowledge/znanje-lina.md ─► _znanje() ───────────
 | Prompt locker / gekürzt (`prompts.py`) | alle 3 Phasen + Backend; `tests/test_prompts_razgovor.py` prüft ~25 wörtliche Sätze | Tests werden rot, bis angepasst | **mittel**: Lina könnte Pflichtschritte auslassen (Identität, Abschluss-Tool) | Tests bewusst neu schreiben; Szenarien S1–S19 plus alle bestehenden 13 |
 | Verschlankung (Ablauf ins Backend) | Backend muss „nächste fehlende Angabe“ liefern; Delegation pro Phase | weniger Text in der Stimme | **hoch**: fehlende Felder, Fragen in falscher Reihenfolge (Angebot vor Erfahrung) | eigener Schritt 2, erst nach bestandenem Schritt 1; Endzustands-Prüfung in `simulacija.py` |
 | Mehr Smalltalk | Handoff überträgt Verlauf: max. 128 Nachrichten / 8.192 Tokens (LiveKit-Doku) | sehr lange Gespräche: frühe Teile fehlen in der Kraj-Phase | niedrig | Smalltalk kurz halten; S4 mit langem Gespräch |
-| Verhalten während Tools | Delegation `<|SpawnThinking|>`, Backend-Regel 9 | weniger Füllsätze | niedrig: Stille wirkt wie Abbruch | S15; ein kurzer Satz bleibt erlaubt |
+| Verhalten während Tools | Delegation `<\|SpawnThinking\|>`, Backend-Regel 9 | weniger Füllsätze | niedrig: Stille wirkt wie Abbruch | S15; ein kurzer Satz bleibt erlaubt |
 | **Alter 45** (`:211` **und Code** `kontekst.py:131`, heute `>= 60`) | `nije_zainteresiran` → `Pozivi Lina` → Workflow B setzt `Lina poziv status = nije zainteresiran`; Dispatcher wählt nur leer/čeka/ponovni pokušaj/povratni poziv | **geprüft: kein Wiederanruf.** Nur die Beschriftung ist ungenau („kein Interesse“ statt „zu alt“) | niedrig | Lösung L1 in 10.3 |
 | **Kinder „mali ili veći“** | Validator `werte.py:163` lässt **nur Zahlen** zu → Tool meldet „Nije sačuvano“ | **geprüft: heute bricht das.** Lina müsste nachfragen oder Zahlen erfinden | **hoch** ohne Anpassung | Lösung L2 in 10.3. „Dob djece“ ist **kein** Airtable-Feld, nur eine Zeile in der Notiz `Dopune → Opis` (multilineText) |
 | Jahre ungefähr / ohne Jahr | `airtable.py:163/172`, `plausibilitaet.py`, `kontekst.py`, `govor.py` | Code kann das schon | niedrig: Erfahrungsjahre unvollständig, Überschneidung bei Station ohne Jahr nicht prüfbar | Tests; Team sieht leeres Datum in Airtable |

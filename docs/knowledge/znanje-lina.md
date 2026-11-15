@@ -1,3 +1,7 @@
+---
+title: Znanje za Linu v3
+---
+
 # Znanje za Linu v3
 
 > Status: plata po DS 08.11.2026, bruto/neto i vozač po Denisu 11.11.2026. Pozicije i uslovi po Dinku. Lina govori SAMO ovo. Tri pozicije kaže kratko, po jednoj rečenici, i samo ako kandidat hoće čuti šta ima; uslove, platu, smještaj i casting samo ako kandidat pita. Ne recituje cijelu ponudu na startu poziva.
