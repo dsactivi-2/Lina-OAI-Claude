@@ -60,6 +60,12 @@ def _record_id(ctx: JobContext) -> str | None:
     return os.getenv("LINA_TEST_RECORD_ID") or None
 
 
+def _amd_stt() -> str:
+    # Default-STT von AMD (cartesia/ink-whisper) gibt es in der EU-Region nicht;
+    # ohne Transkript endet AMD immer mit UNCERTAIN. Nova-3 hat EU-Endpunkt und Bosnisch.
+    return os.getenv("LINA_AMD_STT", "deepgram/nova-3:bs")
+
+
 async def on_simulation_end(sim: SimulationContext) -> None:
     expected = sim.userdata().get("expected_state")
     if not expected:
@@ -295,11 +301,9 @@ async def my_agent(ctx: JobContext):
     if ctx.simulation_context():
         return
     try:
-        # Default-STT von AMD (cartesia/ink-whisper) gibt es in der EU-Region nicht;
-        # ohne Transkript endet AMD immer mit UNCERTAIN. Nova-3 hat EU-Endpunkt und Bosnisch.
         async with AMD(
             session,
-            stt=os.getenv("LINA_AMD_STT", "deepgram/nova-3:bs"),
+            stt=_amd_stt(),
             ivr_detection=False,
         ) as detector:
             amd = await detector.execute()
