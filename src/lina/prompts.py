@@ -12,6 +12,7 @@ from pathlib import Path
 
 from . import prompts_v2, verzija
 from .kontekst import Kontekst
+from .znanje import citaj_znanje
 
 PROMPT_VERZIJA = verzija.V3
 aktivna_verzija = verzija.aktivna_verzija
@@ -27,10 +28,9 @@ def _v2() -> bool:
 def _znanje() -> str:
     dijelovi = []
     for f in ZNANJE_DATEIEN:
-        try:
-            dijelovi.append(f.read_text(encoding="utf-8").strip())
-        except OSError:
-            continue
+        t = citaj_znanje(f, fallback="").strip()
+        if t:
+            dijelovi.append(t)
     if not dijelovi:
         return "Nemaš dodatnih informacija o poslu. Na pitanja o poslu reci da ćeš zabilježiti pitanje."
     return "\n\n".join(dijelovi)

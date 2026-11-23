@@ -9,6 +9,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from .kontekst import Kontekst
+from .znanje import citaj_znanje
 
 PROMPT_VERZIJA = "2.0.0"  # = verzija.V2
 
@@ -18,10 +19,7 @@ ZNANJE_PATH = (
 
 
 def _znanje() -> str:
-    try:
-        return ZNANJE_PATH.read_text(encoding="utf-8")
-    except OSError:
-        return "Nemaš dodatnih informacija o poslu. Na pitanja o poslu reci da ćeš zabilježiti pitanje."
+    return citaj_znanje(ZNANJE_PATH)
 
 
 _ZAJEDNICKO = """\
