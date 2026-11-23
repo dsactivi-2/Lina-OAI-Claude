@@ -1,6 +1,8 @@
 # AGENTS.md
 
-This is a LiveKit Agents project. LiveKit Agents is a Python SDK for building voice AI agents. This starter is designed to run in LiveKit Cloud. See @README.md for more about the rest of the LiveKit ecosystem.
+This repository is **Lina**, a production LiveKit voice agent (Job-Step, Anruf 1). Project rules, Airtable, and deploy constraints: @CLAUDE.md. Architecture and prompt versions: `docs/ARCHITEKTUR.md`, `docs/PROMPTS.md`.
+
+The rest of this file is the LiveKit Agents workflow (CLI, simulations, debugger). LiveKit Agents is a Python SDK for building voice AI agents. This project runs in LiveKit Cloud. See @README.md for Lina-specific setup.
 
 ## Tooling
 

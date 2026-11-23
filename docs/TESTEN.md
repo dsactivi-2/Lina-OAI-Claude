@@ -77,7 +77,12 @@ Lokal: `LINA_ENV=lokal` in `.env.local`, damit Tests nicht als `production` ersc
 lk agent simulate audio --scenarios scenarios.yaml
 lk agent simulate audio --scenarios scenarios-guardrails.yaml
 lk agent simulate audio --scenarios scenarios-neu.yaml
+lk agent simulate audio --scenarios scenarios-lina3.yaml      # Prompt v3
+lk agent simulate audio --scenarios scenarios-gpt-live.yaml   # Abschied, Auflegen, GPT-Live
 lk agent simulate list
 ```
 Simulationen nutzen **keinen** Airtable-Zugriff: Kandidaten kommen aus `userdata`
 (`src/lina/simulacija.py`), der Endzustand wird in `on_simulation_end` geprüft.
+CI (`.github/workflows/simulations.yml`) startet nur manuell und nur die ersten zwei Dateien.
+
+Welche Datei zu v2/v3 gehört: `docs/PROMPTS.md`. Lokal `LINA_PROMPT` setzen, sonst gilt wie in der Cloud: Staging = v3, sonst v2.

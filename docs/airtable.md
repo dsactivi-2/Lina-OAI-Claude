@@ -4,13 +4,13 @@ title: "Airtable: Schema, Pflichtunterlagen, Pre-Call-Fetch"
 
 # Airtable: Schema, Pflichtunterlagen, Pre-Call-Fetch
 
-Stand: 05.11.2026. Schema per Airtable-Connector ausgelesen (nur Struktur, keine Datensätze).
+Stand Schema: 05.11.2026 (Connector, nur Struktur). Schreibpfad und Status: Code 16.11.2026, siehe `docs/ARCHITEKTUR.md`.
 **[Startwert]** = meine Annahme für den ersten Entwurf, von Denis noch zu bestätigen bzw. anzupassen.
 
 ## Base
 - **GIG Casting**, `appz3VFomHaWhuILV` (Interface „Recruiter dashboard“ `pagYwUjTjMwr86Ll7`)
 - Haupttabelle **`Prijave (test)`**, `tbl7WHRtBkRX7tGxt`: ein Datensatz pro Bewerber. Trotz „(test)“ im Namen ist das faktisch die Arbeitstabelle mit **echten Bewerberdaten**: tägliche Excel-Importe, davor jeweils Backup-Tabellen.
-- Weitere Tabellen: `Dopune` (`tblzvtVFXZHFgk8mq`), `Termini i zadaci` (`tblMTxAh92crqggAY`), `Radno iskustvo`, `Obrazovanje`, `Casting ocjene`, `BACKUP …` (nicht anfassen)
+- Weitere Tabellen: `Dopune` (`tblzvtVFXZHFgk8mq`), `Termini i zadaci` (`tblMTxAh92crqggAY`), `Radno iskustvo`, `Obrazovanje`, `Pozivi Lina` (`tblXnTENm7kts7wwT`), `Casting ocjene`, `BACKUP …` (nicht anfassen)
 
 **Im Code immer Field-IDs verwenden, nicht Namen.** Namen können sich ändern.
 
@@ -67,7 +67,7 @@ Felder, in dieser Reihenfolge:
 - Wird erst in **Anruf 2** genutzt. Lina sendet selbst nichts, das läuft über die bestehende Automation.
 
 ### Wen Lina anruft
-**Statusfrei.** Ein manueller oder n8n-Trigger übergibt eine Liste von Record-IDs, je ID ein Dispatch. Status-Filter kommen später.
+**Statusfrei beim Dispatch.** Ein manueller oder n8n-Trigger übergibt Record-IDs, je ID ein Job. Nach dem Gespräch setzt der Code **einmal** `Status kandidata`, und nur wenn der Wert noch leer, `New Lead` oder `NE JAVLJA SE` ist (`src/lina/status_odluka.py`). Spätere Stapel rührt Lina nicht an.
 
 ## Neue Felder (vorgeschlagen, noch NICHT angelegt, wartet auf Freigabe)
 Geprüft am 05.11.2026: Keiner der Namen existiert in der Zieltabelle. Bestehende Felder werden nicht verändert. Die Maske zeigt nur fest eingestellte Felder und bleibt deshalb unverändert.
@@ -88,9 +88,9 @@ Geprüft am 05.11.2026: Keiner der Namen existiert in der Zieltabelle. Bestehend
 - **„Leer“** bedeutet für diese Bereiche: Es gibt noch keinen verknüpften Datensatz. Gibt es schon Einträge, liest Lina sie vor und fragt nur: „Je li to sve, ili ima još nešto?“
 - Bestehende Datensätze überschreibt Lina nie.
 
-## Schreiben (nach dem Gespräch) [Startwert]
+## Schreiben (nach dem Gespräch)
 
-Lina schreibt **nicht direkt** in `Prijave (test)`. **Personendaten** gehen nach `Dopune` (Prüfung durchs Team), **Erfahrung und Ausbildung** als neue Datensätze in `Radno iskustvo` bzw. `Obrazovanje` (siehe oben).
+Lina schreibt Personendaten **nicht** als neue Zeile in `Prijave (test)`. **Personendaten** gehen nach `Dopune` (Prüfung durchs Team), **Erfahrung und Ausbildung** als neue Datensätze in `Radno iskustvo` bzw. `Obrazovanje`. **Gesprächsprotokoll** nach `Pozivi Lina`. Der einzige Patch auf `Prijave (test)` ist `Status kandidata` (einmal, siehe oben).
 
 1. **Neuer Datensatz in `Dopune`** (`tblzvtVFXZHFgk8mq`):
    - `Kandidat` (`fldDZ1Ik9Xq7vm0f3`) → Link auf genau den geladenen Record
@@ -99,13 +99,16 @@ Lina schreibt **nicht direkt** in `Prijave (test)`. **Personendaten** gehen nach
    - am Telefon erhobene Angaben in die gleichnamigen `Dopune`-Felder, z. B. `Status boravka` (`fldxKNjPUZnC5uUyO`), `Radna dozvola` (`fldhrlSRrRjSKmKwV`), `Vozačka dozvola` (`fldoeHwM4FaEwjvzQ`), `Tačan naziv škole, grad, država` (`fld6GOMBwJf0CZlK7`), `Tačan naziv struke` (`fld6WimSC758MC85L`), `Da li je diploma dostupna?` (`fldpiOA7rUjsNE2St`), `Radno iskustvo 1 – …`
    - Gesprächsergebnis und Zusammenfassung in `Opis iskustva ili obrazovanja` (`fldejrE05pgkiVOY1`). [Startwert: Ein eigenes Feld „Ergebnis Lina-Anruf“ wäre sauberer und ist anzulegen]
 2. **Bei Rückrufwunsch:** neuer Datensatz in `Termini i zadaci` (`tblMTxAh92crqggAY`): `Name`, `Datum i vrijeme termina`, `Kandidat` (Link), `Status` = Todo
+3. **Immer** neuer Datensatz in `Pozivi Lina` (`tblXnTENm7kts7wwT`): Oznaka, Datum, Sažetak, Ishod, Okruženje, Link auf den Kandidaten; optional Transkript-URL.
 
-Gesprächsergebnisse: `erreicht` · `rückruf` · `kein_interesse` · `opt_out` · `nicht_erreicht` · `falsche_person`
+Ishod in `Pozivi Lina` (Code `src/lina/stanje.py`): `zavrseno` · `djelimicno` · `povratni_poziv` · `nije_zainteresiran` · `ne_zovite_vise` · `pogresna_osoba` · `prekinuto`.
+Ohne `zavrsi_razgovor` gilt `ishod_bez_kraja()`: Rückruf oder schon erfasste Angaben sind kein Abbruch.
 
-## Umsetzung (Stand Code 05.11.2026)
+## Umsetzung (Stand Code 16.11.2026)
 - Werte ohne eigenes Airtable-Feld (Deutsch- und Englisch-Niveau, Kinder, Smjer/Stepen der Schule, Erklärungen zu Logikprüfungen, Gesprächsergebnis, Zusammenfassung) stehen bis zum Anlegen der neuen Spalten als Notiz in `Dopune` → `Opis iskustva ili obrazovanja`.
-- Gespräche ohne erfasste Angabe und ohne Ergebnis erzeugen keinen Dopune-Eintrag.
+- Gespräche ohne erfasste Angabe erzeugen keinen Dopune-Eintrag, aber immer eine Zeile in `Pozivi Lina`.
 - Jede Tabelle wird pro Gespräch höchstens einmal geschrieben. Bei einem Fehler holt das Sitzungsende nur fehlende Tabellen nach.
+- Optional: Transkript nach R2, URL in `Pozivi Lina` → Link. Secrets fehlen → Zeile bleibt, kein Upload (`src/lina/r2.py`).
 
 ## Pre-Call-Fetch-Vertrag
 1. Der Trigger (manuell oder n8n) übergibt pro Kandidat `record_id` als Dispatch-Metadaten.
@@ -117,7 +120,7 @@ Gesprächsergebnisse: `erreicht` · `rückruf` · `kein_interesse` · `opt_out` 
    nedostaje_dokumenti: [...]                              # erst Anruf 2
    ```
 4. Nur diese Zusammenfassung geht in die Instruktionen.
-5. Nach dem Gespräch schreibt das Tool in `Dopune` bzw. `Termini i zadaci`, nie direkt in `Prijave (test)`.
+5. Nach dem Gespräch: neue Zeilen in `Dopune` / `Radno iskustvo` / `Obrazovanje` / `Termini` / `Pozivi Lina`. Auf `Prijave (test)` nur der eine Status-Patch.
 
 ## Offen
 - Alle [Startwert]-Punkte bestätigen

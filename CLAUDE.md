@@ -19,9 +19,9 @@ Zweistufiger Outbound-Prozess:
 ## Architektur-Leitplanken
 - **Pre-Call-Fetch im Code, nicht im Modell:** Vor dem Gesprächsstart lädt der Entrypoint den Kandidaten-Datensatz aus Airtable und berechnet daraus `vorhanden` und `fehlt`. Nur diese Zusammenfassung geht an die Instruktionen, keine Rohdaten.
 - **Das Modell interpretiert, der Code entscheidet:** Zustand, Freigaben und Airtable-Schreibzugriffe liegen im Code bzw. in Tools.
-- **Zurückschreiben** nur über ein Tool, nur Felder mit Inhalt, und mit Gesprächsergebnis (erreicht, Rückruf, kein Interesse, Opt-out).
-- **Drei Gesprächsphasen (Handoff):** Pozdrav → Prikupljanje → Kraj. Tools nur in der Phase. GPT-Live startet pro Handoff eine neue Modell-Session; `chat_ctx` ohne alte Instruktionen mitgeben.
-- **Wissen** (Job-Step, Jobangebot) liegt in `docs/knowledge/` und wird von dort in die Instruktionen geladen, nicht im Code dupliziert.
+- **Zurückschreiben** nur über `sacuvaj()` (Tool `zavrsi_razgovor` oder Shutdown), nur Felder mit Inhalt, Ishod aus `stanje.py` (`zavrseno`, `djelimicno`, `povratni_poziv`, …).
+- **Drei Gesprächsphasen:** Pozdrav → Prikupljanje → Kraj. Tools nur in der Phase. GPT-Live startet pro klassischem Handoff eine neue Modell-Session; `chat_ctx` ohne alte Instruktionen mitgeben. In **v3** ist Kraj kein Handoff, sondern `append_instructions` + `update_tools` (siehe `docs/PROMPTS.md`).
+- **Wissen** liegt in `docs/knowledge/` und wird von dort in die Instruktionen geladen, nicht im Code dupliziert. v2 liest nur `znanje-lina-v2.md`, v3 `znanje-lina.md` + `jobstep.md`. `job-angebot.md` wird nicht geladen. YAML-Frontmatter dieser Dateien landet auf `main` derzeit mit im Prompt.
 
 ## Datum und Zeit
 - Zeitzone **`Europe/Sarajevo`** (MEZ/MESZ, Sommerzeit automatisch). **Nie fest „UTC+1“ setzen.**
@@ -50,16 +50,24 @@ Zweistufiger Outbound-Prozess:
 - Keys nur in `.env.local` (gitignored). Nie in Code, Commits oder Chat.
 
 ## Code-Struktur
-- `src/agent.py`: Einstieg, AMD (kein Simulation), Start mit PozdravAgent
+- `src/agent.py`: Einstieg, AMD (kein Simulation), Start mit PozdravAgent, Sprachkorrektur-Hook (nur v3)
+- `src/lina/verzija.py`: v2/v3 aus `LINA_PROMPT` bzw. `LIVEKIT_AGENT_DEPLOYMENT`
 - `src/lina/config.py`: alle Airtable-IDs und der Fragenkatalog `PITANJA` (Reihenfolge, `abfragen=False` schaltet eine Frage ab)
 - `src/lina/kontekst.py`: „nur wenn leer“ inkl. Dopune · `plausibilitaet.py`: L1–L10 · `werte.py`: erlaubte Werte
-- `src/lina/agent_lina.py`: PozdravAgent, LinaAgent, KrajAgent · `prompts.py`: Voice (drei Sets) + Backend
-- `src/lina/airtable.py`: Lesen und Schreiben · `simulacija.py`: Szenarien-Daten und Endzustands-Prüfung
-- `docs/knowledge/znanje-lina.md`: Wissen, das Lina sagen darf (bosnisch, wird in die Instruktionen geladen)
+- `src/lina/agent_lina.py`: PozdravAgent, LinaAgent, KrajAgent
+- `src/lina/prompts_v2.py`: eingefrorener Produktions-Prompt · `prompts.py`: v3
+- `src/lina/airtable.py`: Lesen, Schreiben, einmal Status · `status_odluka.py`: Statusname aus Fakten
+- `src/lina/r2.py`: optionales Transkript nach R2 · `dialog.py` / `telemetrie.py`: Langfuse
+- `src/lina/govor.py`: Pflichtfragen aus dem Gesagten · `jezik.py`: ijekavica-Korrektur · `mapa.py`: Nominatim BA
+- `src/lina/simulacija.py`: Szenarien-Daten und Endzustands-Prüfung
 
 ## Projektdokumente
+- `docs/ARCHITEKTUR.md`: Phasen, Tools, Schreibpfad, AMD, Dispatch
+- `docs/PROMPTS.md`: v2/v3, Wissen, Frontmatter-Fallstrick
 - `docs/TESTEN.md`: Tests, Debugger, Console, Simulationen
-- `docs/knowledge/jobstep.md`, `docs/knowledge/job-angebot.md`: Wissensbasis (Entwurf, wird überarbeitet)
+- `docs/DEPLOY.md`: Staging/Production, Secrets, Rollback
+- `docs/knowledge/znanje-lina.md` (v3) / `znanje-lina-v2.md` (v2): Wissen, das Lina sagen darf
+- `docs/knowledge/jobstep.md`: nur v3, nur auf Nachfrage · `job-angebot.md`: Entwurf, nicht geladen
 - `docs/airtable.md`: Felder, Pflichtunterlagen, Pre-Call-Fetch-Vertrag
 - `docs/voice-prompting.md`: Prompt-Prinzipien
 - `docs/plausibilitaet.md`: Logikprüfungen
