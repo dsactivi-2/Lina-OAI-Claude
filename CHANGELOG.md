@@ -3,6 +3,13 @@
 Versionsnummer: `pyproject.toml` (Hauptversion.Funktion.Korrektur). Ablauf: `docs/DEPLOY.md`.
 „LiveKit-Version“ = ID aus `lk agent status` (für `lk agent rollback`).
 
+## Docs – 23.11.2026 (kein Versionsbump)
+- README beschreibt Lina statt des LiveKit-Starters.
+- Neu: `docs/ARCHITEKTUR.md` (Phasen, Tools, Schreiben, AMD, R2) und `docs/PROMPTS.md` (v2/v3, Wissen, Frontmatter).
+- `docs/airtable.md`: Ishod-Werte, `Pozivi Lina`, einmaliger Status-Patch.
+- `docs/TESTEN.md`: `scenarios-lina3.yaml` und `scenarios-gpt-live.yaml`.
+- `.github/workflows/template-check.yml` entfernt (LiveKit-Starter; `uv.lock` und `livekit.toml` gehören ins Repo).
+
 ## 1.1.0 – staging, 11.11.2026 (Branch `lina-3-prompt-v2`, Git-Tag `v1.1.0-rc.1` = Commit `847c444`, LiveKit-Version `mshPFHzUFdGr`, noch nicht abgenommen)
 - Staging läuft ohne Secret mit v3 (`LIVEKIT_AGENT_DEPLOYMENT=staging`), production bleibt v2.
   Grund: LiveKit-Secrets gelten für alle Deployments eines Agents.

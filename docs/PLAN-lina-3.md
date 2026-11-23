@@ -3,6 +3,8 @@
 Stand: 11.11.2026 · Status: **freigegeben von Denis 11.11.2026, Schritt 1 gebaut, Test mit Stimme offen** · Branch: `lina-3-prompt`
 Basis: `main` @ `af8cfbb`, `src/lina/prompts.py`. Zeilenangaben beziehen sich auf diesen Stand.
 
+Nachtrag 23.11.2026 (nur Ist-Zustand, Plantext darunter unverändert): v3 läuft auf Staging ohne Secret (`LIVEKIT_AGENT_DEPLOYMENT=staging`). `_znanje()` in v3 lädt `znanje-lina.md` **und** `jobstep.md`. `job-angebot.md` bleibt ungeladen. YAML-Frontmatter der Knowledge-Dateien steht auf `main` noch im Prompt. Betrieb: `docs/PROMPTS.md`.
+
 ## 0. Ziel und Leitplanken
 
 **Oberstes Ziel:** Lina klingt so spontan und locker wie Alma: menschlich, freundlich, emotional, mit Smalltalk und einer Bemerkung, wo sie passt. Kein roboterhaftes Abarbeiten.

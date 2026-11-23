@@ -22,7 +22,16 @@ LANGFUSE_INHALTE=1
 # NUR für die Testphase: Agent Console ohne Metadaten → Test-Kandidat K-0196.
 # Vor echten Anrufen ENTFERNEN (sonst landen Tests ohne Kandidat bei K-0196).
 LINA_TEST_RECORD_ID=rec17GODhyD0Lkgzp
+# Optional: Transkript nach R2 (alle fünf oder keine). Fehlt etwas, bleibt die Pozivi-Zeile.
+# R2_BUCKET=
+# R2_PUBLIC_BASE=
+# R2_ENDPOINT=
+# R2_ACCESS_KEY_ID=
+# R2_SECRET_ACCESS_KEY=
 ```
+
+Kein `LINA_PROMPT` als Cloud-Secret setzen: Secrets gelten für **alle** Deployments.
+Staging nimmt v3, Production v2 (`src/lina/verzija.py`, `docs/PROMPTS.md`).
 
 ## 2. Erstes Deploy
 ```bash
@@ -66,6 +75,8 @@ Wichtig:
 - Befehle einzeln ausführen, nie als Block einfügen (sonst läuft `promote` ungewollt mit).
 - `lk agent delete` nie ohne `--deployment staging` (sonst ist das Original weg).
 - Testanrufe ohne `--deployment` gehen an das Original.
+- Den LiveKit-Starter-Workflow `template-check.yml` nicht wieder anlegen:
+  `uv.lock` und `livekit.toml` gehören in dieses Repo.
 
 ## Rollback
 Ship-Plan: `lk agent rollback` (Optionen mit `lk agent rollback --help` prüfen; Versions-IDs in `CHANGELOG.md`).

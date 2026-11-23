@@ -5,18 +5,19 @@ title: Backlog – Lina Outbound
 # Backlog – Lina Outbound
 
 ## Offene Entscheidungen
-- [ ] **ADR 0001:** GPT-Live über LiveKit Inference (Vorschlag) oder OpenAI-Plugin
+- [ ] **ADR 0001:** GPT-Live über LiveKit Inference (Vorschlag) oder OpenAI-Plugin — im Code läuft Inference, ADR bleibt „Vorschlag“
 - [ ] **Airtable-Schema:** echte Felder auslesen, Pflichtunterlagen und „vorhanden“-Felder festlegen (`docs/airtable.md`)
-- [ ] **Jobbeschreibung** neu und genauer fassen (`docs/knowledge/job-angebot.md`)
-- [ ] **Job-Step-Wissen** füllen (`docs/knowledge/jobstep.md`)
-- [ ] **KI-Hinweis:** Gleich zu Beginn sagen, dass Lina digital ist, oder nur auf Nachfrage wie in v2? Rechtlich prüfen (EU AI Act Art. 50, Datenschutz BiH), Ergebnis als ADR
+- [ ] **Jobbeschreibung** in `docs/knowledge/job-angebot.md` (Entwurf, **wird nicht geladen**; geladenes Wissen steht in `znanje-lina.md` / `jobstep.md`)
+- [x] **Job-Step-Wissen** in `docs/knowledge/jobstep.md` (v3, Stand 11.11.2026)
+- [x] **KI-Hinweis:** nur auf Nachfrage (Plan Lina 3, E1)
 - [ ] **Aufzeichnung:** ja oder nein, Einwilligungsformulierung
 - [ ] **Eignungskriterien** festlegen (wer geht in Anruf 2?)
 - [ ] **Anruf 2 (Unterlagen):** später, eigener Ablauf, nutzt `Kratki link za dopunu`
 - [ ] **Trigger:** n8n-Workflow oder manuelles Skript, das eine Liste von Record-IDs dispatcht
-- [ ] **Status-Logik:** später
-- [ ] **Telefonie:** SIP-Provider und Outbound-Trunk für BiH-Nummern
+- [x] **Status-Logik:** `src/lina/status_odluka.py` schreibt einmal `Status kandidata` (nur leer / New Lead / NE JAVLJA SE)
+- [x] **Telefonie:** SIP-Pfad dokumentiert (`docs/TELEFONIE.md`); Inbound und eigene LiveKit-Nebenstelle offen
 - [ ] **Anrufzeiten** und Wiederholversuche
+- [ ] **YAML-Frontmatter** aus Knowledge-Dateien vor dem Prompt strippen (Branch `test/znanje-frontmatter`, nicht auf `main`)
 
 ## Entschieden (05.11.2026)
 - Mehrfache Erfahrung und Ausbildung: Option B (direkt in `Radno iskustvo` / `Obrazovanje`)

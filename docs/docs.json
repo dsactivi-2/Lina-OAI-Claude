@@ -12,7 +12,7 @@
       },
       {
         "group": "Betrieb",
-        "pages": ["TESTEN", "DEPLOY", "TELEFONIE"]
+        "pages": ["TESTEN", "DEPLOY", "TELEFONIE", "ARCHITEKTUR", "PROMPTS"]
       },
       {
         "group": "Logik",
@@ -20,7 +20,7 @@
       },
       {
         "group": "Wissen",
-        "pages": ["knowledge/jobstep", "knowledge/job-angebot", "knowledge/znanje-lina"]
+        "pages": ["knowledge/jobstep", "knowledge/job-angebot", "knowledge/znanje-lina", "knowledge/znanje-lina-v2"]
       },
       {
         "group": "Architektur",
@@ -28,7 +28,7 @@
       },
       {
         "group": "Planung",
-        "pages": ["BACKLOG"]
+        "pages": ["BACKLOG", "PLAN-lina-3"]
       }
     ]
   }
