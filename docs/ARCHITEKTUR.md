@@ -114,3 +114,5 @@ Umgebung für Pozivi/`_okruzenje()`: `LIVEKIT_DEPLOYMENT` oder `LINA_OKRUZENJE`,
 ## Dispatch / n8n
 
 Pro Kandidat ein Job. Metadaten genau `{"record_id":"<Airtable-Record-ID>"}`. Lina wählt die Nummer nicht selbst; Outbound läuft über SIP (`docs/TELEFONIE.md`).
+
+Ungültige Metadaten (kein JSON, kein `record_id`) starten die Session **nicht** und fallen nicht auf `LINA_TEST_RECORD_ID` zurück. Vertrag, Umgebungsvariablen und Fallstricke: `docs/BETRIEB.md`.

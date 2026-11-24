@@ -51,13 +51,20 @@ lk sip participant create --project lina-oai --trunk ST_pN6ccnMf26NY \
 Ohne `--agent-deployment staging` trifft **Production**.
 
 ## AMD
-Nach dem Abheben (Staging): Mensch vs. Mailbox, `ivr_detection=False`.
-Voicemail: kurze Bosnisch-Nachricht, dann Ende.
+Nach `ctx.connect()`, nicht in Simulationen (`src/agent.py`). Mensch vs. Mailbox, `ivr_detection=False`.
+
+- STT: `LINA_AMD_STT`, Standard `deepgram/nova-3:bs`. Cartesia Ink-Whisper (LiveKit-Default) gibt es in eu-central nicht; ohne Transkript endet AMD immer `UNCERTAIN`.
+- `machine-vm`: kurze Bosnisch-Nachricht, `ishod=prekinuto`, Shutdown `voicemail`.
+- `machine-unavailable`: `ishod=prekinuto`, keine Ansage.
+- AMD-Fehler: Log, Gespräch läuft weiter wie Mensch.
+
+Dispatch-Metadaten und STT-Fallstricke: [`docs/BETRIEB.md`](BETRIEB.md).
 
 ## Fehlerbilder
 - 480 und `last_arg` mit Gateway `5c24281b…`: Anruf ging an sipgate (Route falsch).
 - 484 Address Incomplete: Nummer passt nicht, `last_arg` im FusionPBX-Anrufprotokoll prüfen.
 - Kein Eintrag in TG400 → Call Logs: Anruf erreicht den TG400 nicht.
+- AMD immer unsicher: STT prüfen (`LINA_AMD_STT`), nicht Cartesia in der EU.
 
 ## Offen
 - Feste öffentliche IP des TG400-Standorts klären (Gateway nutzt 213.91.103.192).

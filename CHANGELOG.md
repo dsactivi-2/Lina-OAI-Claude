@@ -3,6 +3,12 @@
 Versionsnummer: `pyproject.toml` (Hauptversion.Funktion.Korrektur). Ablauf: `docs/DEPLOY.md`.
 „LiveKit-Version“ = ID aus `lk agent status` (für `lk agent rollback`).
 
+## Docs – 24.11.2026 (kein Versionsbump)
+- Neu: `docs/BETRIEB.md` (Setup, Umgebungsvariablen, Dispatch-Vertrag, AMD-STT, Fallstricke).
+- `docs/airtable.md`: Fragenkatalog an `PITANJA` in `src/lina/config.py` angeglichen (Personendaten werden gefragt; `status_boravka`/`radna_dozvola` aus).
+- `docs/TELEFONIE.md`: EU-AMD-STT (`deepgram/nova-3:bs`).
+- `CLAUDE.md`: Status-Patch nach dem Gespräch; Katalog statt alter „kein Personendaten“-Annahme.
+
 ## Docs – 23.11.2026 (kein Versionsbump)
 - README beschreibt Lina statt des LiveKit-Starters.
 - Neu: `docs/ARCHITEKTUR.md` (Phasen, Tools, Schreiben, AMD, R2) und `docs/PROMPTS.md` (v2/v3, Wissen, Frontmatter).

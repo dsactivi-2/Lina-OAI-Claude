@@ -54,6 +54,7 @@ Details: [`docs/ARCHITEKTUR.md`](docs/ARCHITEKTUR.md). Prompt-Versionen und Wiss
 ## Tests und Betrieb
 
 - Unit-Tests, Debugger, Console, Langfuse: [`docs/TESTEN.md`](docs/TESTEN.md)
+- Setup, Umgebungsvariablen, Dispatch, Fallstricke: [`docs/BETRIEB.md`](docs/BETRIEB.md)
 - Staging/Production, Secrets, Rollback: [`docs/DEPLOY.md`](docs/DEPLOY.md)
 - SIP-Pfad LiveKit → FusionPBX → TG400: [`docs/TELEFONIE.md`](docs/TELEFONIE.md)
 - Coding-Agenten (Cursor/Claude): [`CLAUDE.md`](CLAUDE.md), LiveKit-Workflows in [`AGENTS.md`](AGENTS.md)

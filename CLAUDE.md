@@ -7,7 +7,7 @@ Zweistufiger Outbound-Prozess:
 1. **Anruf 1 (aktueller Bau): Datenabfrage.** Lina ruft Bewerber an, bedankt sich für die Bewerbung und fragt **nur die fehlenden, für die Eignung relevanten Angaben** ab. **Sie fordert in diesem Anruf keine Unterlagen an.** Fragen zu Job-Step und zum Jobangebot beantwortet sie aus der Wissensbasis.
 2. **Eignungsprüfung:** passiert außerhalb des Gesprächs (Team bzw. Code). Lina entscheidet nicht über die Eignung und kündigt sie nicht an.
 3. **Anruf 2 (später): Unterlagen anfordern**, nur bei geeigneten Kandidaten.
-- **Auslöser:** statusfrei. Manueller Start oder per n8n mit einer **Liste von Record-IDs**, ein Dispatch pro Kandidat. Status-Logik kommt später.
+- **Auslöser:** statusfrei beim Dispatch. Manueller Start oder per n8n mit Record-IDs, ein Job pro Kandidat. Nach dem Gespräch setzt `src/lina/status_odluka.py` einmal `Status kandidata`, und nur wenn der Wert noch leer, `New Lead` oder `NE JAVLJA SE` ist.
 - Später folgt ein eigener Agent für Inbound auf derselben Basis.
 
 ## Fixe Vorgaben
@@ -34,6 +34,7 @@ Zweistufiger Outbound-Prozess:
 - **Bestätigung nur bei Unsicherheit oder langem Eintrag**, eine kurze Parafrase, nicht nach jeder Station. Nie mehrere Stationen auf einmal vorlesen.
 - **Auswahl statt Freitext:** Schreib-Tools akzeptieren nur Werte aus `docs/feldwerte.md`.
 - **Airtable-Schutz:** Bestehende Felder und Daten werden nie umgebaut, überschrieben oder gelöscht. Neue Felder nur nach Freigabe.
+- **Fragenkatalog:** Reihenfolge und Schalter stehen in `PITANJA` (`src/lina/config.py`), nicht in älterer Entwurfsdoku. `status_boravka` und `radna_dozvola` sind `abfragen=False`. Adresse, Geburt, Familie, E-Mail und Staatsangehörigkeit **werden** gefragt, wenn leer. Siehe `docs/airtable.md`.
 - Keine Sprach-Kontrollfragen auf Deutsch oder Englisch. Sprachniveau ist eine Selbsteinschätzung.
 
 ## Arbeitsregeln
@@ -64,6 +65,7 @@ Zweistufiger Outbound-Prozess:
 ## Projektdokumente
 - `docs/ARCHITEKTUR.md`: Phasen, Tools, Schreibpfad, AMD, Dispatch
 - `docs/PROMPTS.md`: v2/v3, Wissen, Frontmatter-Fallstrick
+- `docs/BETRIEB.md`: Setup, Umgebungsvariablen, Dispatch-Vertrag, Fallstricke
 - `docs/TESTEN.md`: Tests, Debugger, Console, Simulationen
 - `docs/DEPLOY.md`: Staging/Production, Secrets, Rollback
 - `docs/knowledge/znanje-lina.md` (v3) / `znanje-lina-v2.md` (v2): Wissen, das Lina sagen darf

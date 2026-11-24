@@ -4,7 +4,7 @@ title: "Airtable: Schema, Pflichtunterlagen, Pre-Call-Fetch"
 
 # Airtable: Schema, Pflichtunterlagen, Pre-Call-Fetch
 
-Stand Schema: 05.11.2026 (Connector, nur Struktur). Schreibpfad und Status: Code 16.11.2026, siehe `docs/ARCHITEKTUR.md`.
+Stand Schema: 05.11.2026 (Connector, nur Struktur). Schreibpfad, Status und Fragenkatalog `PITANJA`: Code 16.11.2026, siehe `docs/ARCHITEKTUR.md` und `src/lina/config.py`.
 **[Startwert]** = meine Annahme für den ersten Entwurf, von Denis noch zu bestätigen bzw. anzupassen.
 
 ## Base
@@ -46,19 +46,29 @@ Eine Unterlage gilt als **vorhanden**, wenn das Dateifeld **nicht leer** ist **o
 
 **Im Gespräch:** Was der Kandidat schon beantwortet hat, auch ungefragt, wird nicht noch einmal gefragt.
 
-Felder, in dieser Reihenfolge:
+Quelle der Wahrheit für Reihenfolge und Schalter: `PITANJA` in `src/lina/config.py`. `izracunaj()` in `src/lina/kontekst.py` baut daraus `nedostaje`. `abfragen=False` lässt den Key im Katalog, stellt die Frage aber nicht.
 
-| Angabe | Feld in `Prijave (test)` (ID) |
-|---|---|
-| Schule bzw. Beruf | `Tačan naziv škole, grad, država` (`fldczOviQFhemuJ9u`), `Tačan naziv struke ` (`fldV8JGvCxQ1cHHku`) |
-| Diplom vorhanden? (nur ja/nein, **nicht** anfordern) | `Da li je diploma dostupna?` (`fldVslRckQwEOMxhb`) |
-| Berufserfahrung | `RADNO MJESTO` (`fld1qJ6uYZ7HKsXuU`), `KOMPANIJA` (`fldeiamQZD6JaQE2r`), `Radno iskustvo – Od/Do` (`fld89KIp3njkrB6aT`/`fldJMsJXNZgMJ3q0f`) |
-| Aufenthaltsstatus | `Status boravka` (`flducCUvS6Rny8wi4`) |
-| Arbeitserlaubnis | `Radna dozvola` (`fldwC9YtkIbvWmNqF`) |
-| Führerschein | `Vozačka dozvola` (`fldWFnqeYiukLviK9`) |
-| Deutschkenntnisse (Selbsteinschätzung) | `Poznavanje njemačkog jezika` (`fldjoM8wtCi3IOm4E`) |
+| Key | Label im Prompt | `abfragen` | Vorhanden, wenn … |
+|---|---|---|---|
+| `radno_iskustvo` | radno iskustvo (sva radna mjesta) | ja | verknüpfte `Radno iskustvo`-Zeilen, Flachfelder `RADNO MJESTO`/`KOMPANIJA`/`Od`/`Do`, oder offene Dopune `Radno iskustvo 1` |
+| `obrazovanje` | školovanje (sve škole) | ja | verknüpfte `Obrazovanje`-Zeilen, Flachfeld `Tačan naziv škole…`, oder offene Dopune-Schule |
+| `njemacki` | znanje njemačkog jezika | ja | `Poznavanje njemačkog jezika` (`fldjoM8wtCi3IOm4E`) |
+| `engleski` | znanje engleskog jezika | ja | noch kein Airtable-Feld → immer „fehlt“, landet in der Dopune-Notiz |
+| `vozacka` | vozačka dozvola (kategorije) | ja | `Vozačka dozvola` oder Dopune `fldoeHwM4FaEwjvzQ` |
+| `status_boravka` | status boravka | **nein** | — |
+| `radna_dozvola` | radna dozvola | **nein** | — |
+| `drzavljanstvo` | državljanstvo | ja | `Državljanstvo` / Dopune `fldniTfnsKFYqFvzh` |
+| `datum_rodjenja` | datum rođenja | ja | Text- oder Datumsfeld / Dopune |
+| `mjesto_rodjenja` | mjesto rođenja | ja | `Mjesto rođenja` / Dopune |
+| `adresa` | adresa stanovanja | ja | `Adresa` oder `Ulica` / Dopune |
+| `bracno_stanje` | bračno stanje | ja | `Bračno stanje` / Dopune |
+| `djeca` | djeca (da/ne, koliko, koliko godina) | ja | noch kein Feld → immer „fehlt“, Notiz |
+| `email` | e-mail adresa | ja | `Email` / Dopune |
+| `vjestine` | posebne vještine | ja | `Vještine` / Dopune |
 
-- Die Formel `Lični podaci – nedostaje` (`fldkpncNkxR0efZv4`) zeigt zusätzlich leere Personendaten. Adresse, Geburtsdaten und Familienstand fragt Lina in Anruf 1 **nicht** ab [Startwert].
+- **Nicht** im Katalog: „Diplom vorhanden?“ (`Da li je diploma dostupna?`). Unterlagen werden in Anruf 1 nicht angefordert; der Status-Code liest Dateien/`Dokumenti` nur für `Pre-casting` / `Zeleni / obrada`.
+- Die Formel `Lični podaci – nedostaje` (`fldkpncNkxR0efZv4`) ist Kontext für Recruiter, kein Fragenfilter. Personendaten (Adresse, Geburt, Familie, E-Mail, Staatsangehörigkeit) **fragt Lina**, sofern das Feld leer ist.
+- Flache Excel-Importfelder (`RADNO MJESTO`, `KOMPANIJA`, `Tačan naziv škole…`) zählen als „schon bekannt“, werden aber nicht überschrieben.
 - Die tatsächlichen Anforderungen (wer ist geeignet) sind **offen** und gehören in `docs/knowledge/job-angebot.md`.
 
 ### Weg zum Nachreichen

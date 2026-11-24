@@ -12,7 +12,7 @@
       },
       {
         "group": "Betrieb",
-        "pages": ["TESTEN", "DEPLOY", "TELEFONIE", "ARCHITEKTUR", "PROMPTS"]
+        "pages": ["TESTEN", "DEPLOY", "TELEFONIE", "BETRIEB", "ARCHITEKTUR", "PROMPTS"]
       },
       {
         "group": "Logik",

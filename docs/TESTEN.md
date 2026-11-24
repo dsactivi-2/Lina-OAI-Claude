@@ -13,7 +13,8 @@ In `.env.local` steht der Test-Kandidat (K-0196, kein echter Bewerber):
 LINA_TEST_RECORD_ID=rec17GODhyD0Lkgzp
 ```
 Er gilt nur, wenn ein Job **ohne** Dispatch-Metadaten startet (lokale Tests). Echte Anrufe
-übergeben `{"record_id": "rec..."}` als Metadaten.
+übergeben `{"record_id": "rec..."}` als Metadaten. Sind Metadaten da, aber ungültig, gibt es
+**keinen** Fallback auf diese Test-ID (`src/agent.py` `_record_id`). Siehe `docs/BETRIEB.md`.
 
 ## 1. Unit-Tests (kein Netz, keine Kosten)
 ```bash

@@ -18,6 +18,7 @@ title: Backlog – Lina Outbound
 - [x] **Telefonie:** SIP-Pfad dokumentiert (`docs/TELEFONIE.md`); Inbound und eigene LiveKit-Nebenstelle offen
 - [ ] **Anrufzeiten** und Wiederholversuche
 - [ ] **YAML-Frontmatter** aus Knowledge-Dateien vor dem Prompt strippen (Branch `test/znanje-frontmatter`, nicht auf `main`)
+- [ ] **AMD/Dispatch-Tests** mergen (Branch `test/amd-stt-und-dispatch`; Verhalten auf `main` ist schon da, Tests noch nicht)
 
 ## Entschieden (05.11.2026)
 - Mehrfache Erfahrung und Ausbildung: Option B (direkt in `Radno iskustvo` / `Obrazovanje`)
